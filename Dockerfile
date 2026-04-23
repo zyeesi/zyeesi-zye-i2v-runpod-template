@@ -292,7 +292,8 @@ COPY start.sh /start.sh
 
 # Set Python 3.12 as default
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1 && \
-    update-alternatives --set python3 /usr/bin/python3.12
+    update-alternatives --set python3 /usr/bin/python3.12 && \
+    chmod +x /start.sh
 
 HEALTHCHECK --interval=30s --timeout=30s --start-period=240s --retries=10 CMD ["python3", "/usr/local/bin/healthcheck.py"]
 
