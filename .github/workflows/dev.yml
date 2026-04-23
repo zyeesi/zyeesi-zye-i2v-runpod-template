@@ -57,5 +57,8 @@ jobs:
           push: true
           source: .
           files: ./docker-bake.hcl
+          set: |
+            *.cache-from=type=gha,scope=dev
+            *.cache-to=type=gha,mode=max,scope=dev
           targets: |
             devpush

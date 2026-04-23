@@ -72,6 +72,9 @@ jobs:
           push: true
           source: .
           files: ./docker-bake.hcl
+          set: |
+            *.cache-from=type=gha,scope=release
+            *.cache-to=type=gha,mode=max,scope=release
           targets: |
             regular
 

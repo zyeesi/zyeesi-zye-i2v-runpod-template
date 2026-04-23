@@ -198,7 +198,6 @@ ARG FILEBROWSER_SHA256
 
 # Update and install runtime dependencies, CUDA, and common tools
 RUN apt-get update && \
-    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     git \
     python3.12 \

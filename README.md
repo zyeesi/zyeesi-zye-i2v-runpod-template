@@ -60,4 +60,5 @@ Edit `/workspace/comfyui_args.txt` (one arg per line):
 
 - Push to `main` to publish dev images: `:dev` and `:dev-cuda12.8`
 - Push a `v*` tag to publish release images and update `:latest`
+- GitHub Actions uses Buildx layer caching so repeated builds can reuse unchanged Docker layers
 - For RunPod, point your template at `ghcr.io/zyeesi/zyeesi-zye-i2v-runpod-template:latest` or a versioned release tag like `ghcr.io/zyeesi/zyeesi-zye-i2v-runpod-template:v0.1.0-cuda12.8`
