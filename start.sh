@@ -17,13 +17,14 @@ BOOTSTRAP_PID=""
 
 setup_ssh() {
     mkdir -p ~/.ssh
+    SSH_KEY_VALUE="${SSH_PUBLIC_KEY:-${PUBLIC_KEY:-}}"
 
     if [ ! -f /etc/ssh/ssh_host_ed25519_key ]; then
         ssh-keygen -A -q
     fi
 
-    if [[ $PUBLIC_KEY ]]; then
-        echo "$PUBLIC_KEY" >> ~/.ssh/authorized_keys
+    if [[ -n "$SSH_KEY_VALUE" ]]; then
+        echo "$SSH_KEY_VALUE" >> ~/.ssh/authorized_keys
         chmod 700 -R ~/.ssh
     else
         RANDOM_PASS=$(openssl rand -base64 12)
@@ -50,7 +51,7 @@ export_env_vars() {
     mkdir -p /root/.ssh
     > "$SSH_ENV_DIR"
 
-    printenv | grep -E '^RUNPOD_|^PATH=|^_=|^CUDA|^LD_LIBRARY_PATH|^PYTHONPATH|^HF_|^HUGGINGFACE_|^TRANSFORMERS_CACHE|^CIVITAI_' | while read -r line; do
+    printenv | grep -E '^RUNPOD_|^VAST_|^SSH_PUBLIC_KEY=|^PUBLIC_KEY=|^PATH=|^_=|^CUDA|^LD_LIBRARY_PATH|^PYTHONPATH|^HF_|^HUGGINGFACE_|^TRANSFORMERS_CACHE|^CIVITAI_' | while read -r line; do
         name=$(echo "$line" | cut -d= -f1)
         value=$(echo "$line" | cut -d= -f2-)
 

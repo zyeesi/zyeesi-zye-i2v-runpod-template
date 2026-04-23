@@ -59,8 +59,7 @@ Edit `/workspace/comfyui_args.txt` (one arg per line):
 
 ## GitHub Actions
 
-- Push to `main` to publish dev images: `:dev`, `:dev-cuda12.8`, and an auto-incremented version tag like `:v0.1.0-cuda12.8`
+- Push to `main` to publish dev images: `:dev` and `:dev-cuda12.8`
 - Push a `v*` tag to publish release images and update `:latest`
 - GitHub Actions uses Buildx layer caching so repeated builds can reuse unchanged Docker layers
 - For RunPod, point your template at `ghcr.io/zyeesi/zyeesi-zye-i2v-runpod-template:latest` or a versioned release tag like `ghcr.io/zyeesi/zyeesi-zye-i2v-runpod-template:v0.1.0-cuda12.8`
-- To start a new manual series such as `v0.2.x`, edit [.github/version.env](/D:/Repo/zye-i2v-runpod-template/.github/version.env) and set `VERSION_PREFIX` plus `PATCH_BASE_COMMIT_COUNT` to the current `git rev-list --count HEAD`
