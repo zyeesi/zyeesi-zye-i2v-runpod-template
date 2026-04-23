@@ -101,7 +101,8 @@ RUN cd /tmp/build/ComfyUI && \
     git add hf_models.json && \
     git -c user.name=- -c user.email=- commit -q -m "Configure ComfyUI-QwenVL models"
 
-# Generate lock file from all requirements (including torch pins), then install with hash verification
+# Install Python requirements with torch pinned via constraints.
+# Custom node requirements are not stable enough for pip-compile + hashes.
 WORKDIR /tmp/build
 RUN cat ComfyUI/requirements.txt > requirements.in && \
     for node_dir in ComfyUI/custom_nodes/*/; do \
@@ -140,14 +141,17 @@ RUN cat ComfyUI/requirements.txt > requirements.in && \
     echo "torchaudio==${TORCHAUDIO_VERSION}" >> constraints.txt && \
     echo "pillow>=12.1.1" >> constraints.txt && \
     TORCH_INDEX_URL="https://download.pytorch.org/whl/${TORCH_INDEX_SUFFIX}" && \
-    PIP_INDEX_URL=https://pypi.org/simple \
-    PIP_EXTRA_INDEX_URL="${TORCH_INDEX_URL}" \
-    PIP_CONSTRAINT=constraints.txt \
-    pip-compile --generate-hashes --output-file=requirements.lock --strip-extras --allow-unsafe requirements.in && \
-    python3.12 -m pip install --no-cache-dir --ignore-installed --require-hashes \
+    python3.12 -m pip install --no-cache-dir --ignore-installed \
     --index-url https://pypi.org/simple \
     --extra-index-url "${TORCH_INDEX_URL}" \
-    -r requirements.lock
+    "torch==${TORCH_VERSION}" \
+    "torchvision==${TORCHVISION_VERSION}" \
+    "torchaudio==${TORCHAUDIO_VERSION}" && \
+    python3.12 -m pip install --no-cache-dir --ignore-installed \
+    --constraint constraints.txt \
+    --index-url https://pypi.org/simple \
+    --extra-index-url "${TORCH_INDEX_URL}" \
+    -r requirements.in
 
 # Bake in SageAttention wheel
 COPY wheels/sageattention-2.2.0-cp312-cp312-linux_x86_64.whl /tmp/sageattention-2.2.0-cp312-cp312-linux_x86_64.whl
