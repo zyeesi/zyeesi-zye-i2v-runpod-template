@@ -1,0 +1,11 @@
+.git
+.github
+docs
+CHANGELOG.md
+LICENSE
+README.md
+.gitattributes
+.gitignore
+__pycache__/
+*.pyc
+scripts/fetch-hashes.sh

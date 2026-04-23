@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 # ============================================================================
 # Stage 1: Builder - Download pinned sources and install all Python packages
 # ============================================================================
@@ -19,7 +20,9 @@ ARG CUDA_VERSION_DASH=12-8
 ARG TORCH_INDEX_SUFFIX=cu128
 
 # Install minimal dependencies needed for building
-RUN apt-get update && \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
     wget \
     curl \
@@ -40,15 +43,13 @@ RUN apt-get update && \
     && dpkg -i cuda-keyring_1.1-1_all.deb \
     && apt-get update \
     && apt-get install -y --no-install-recommends cuda-minimal-build-${CUDA_VERSION_DASH} libcusparse-dev-${CUDA_VERSION_DASH} \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
     && rm cuda-keyring_1.1-1_all.deb \
     && rm -f /usr/lib/python3.12/EXTERNALLY-MANAGED
 
-# Install pip and pip-tools for lock file generation
-RUN curl -sS https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+# Install pip for Python 3.12
+RUN --mount=type=cache,target=/root/.cache/pip \
+    curl -sS https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
     python3.12 get-pip.py && \
-    python3.12 -m pip install --no-cache-dir pip-tools && \
     rm get-pip.py
 
 # Set CUDA environment for building
@@ -78,30 +79,6 @@ RUN git clone --depth 1 https://github.com/1038lab/ComfyUI-QwenVL.git && \
     git clone --depth 1 https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git && \
     git clone --depth 1 https://github.com/cubiq/ComfyUI_essentials.git && \
     git clone --depth 1 https://github.com/huchukato/ComfyUI-HuggingFace.git
-
-# Overlay project-specific ComfyUI config files onto the baked tree
-COPY hf_models.json /tmp/build/ComfyUI/custom_nodes/ComfyUI-QwenVL/hf_models.json
-COPY extra_model_paths.yaml /tmp/build/ComfyUI/extra_model_paths.yaml
-COPY bootstrap_models.py /tmp/build/ComfyUI/bootstrap_models.py
-COPY model_manifest.json /tmp/build/ComfyUI/model_manifest.json
-
-# Init git repos with upstream remotes so ComfyUI-Manager can detect versions
-# and users can update via Manager at their own risk
-RUN cd /tmp/build/ComfyUI && \
-    git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "ComfyUI ${COMFYUI_VERSION}" && git tag "${COMFYUI_VERSION}" && \
-    git remote add origin https://github.com/comfyanonymous/ComfyUI.git && \
-    cd /tmp/build/ComfyUI/custom_nodes/ComfyUI-Manager && \
-    git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "ComfyUI-Manager ${MANAGER_SHA}" && \
-    git remote add origin https://github.com/ltdrdata/ComfyUI-Manager.git && \
-    cd /tmp/build/ComfyUI/custom_nodes/ComfyUI-KJNodes && \
-    git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "ComfyUI-KJNodes ${KJNODES_SHA}" && \
-    git remote add origin https://github.com/kijai/ComfyUI-KJNodes.git && \
-    cd /tmp/build/ComfyUI/custom_nodes/Civicomfy && \
-    git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "Civicomfy ${CIVICOMFY_SHA}" && \
-    git remote add origin https://github.com/MoonGoblinDev/Civicomfy.git && \
-    cd /tmp/build/ComfyUI/custom_nodes/ComfyUI-QwenVL && \
-    git add hf_models.json && \
-    git -c user.name=- -c user.email=- commit -q -m "Configure ComfyUI-QwenVL models"
 
 # Install Python requirements with torch pinned via constraints.
 # Custom node requirements are installed one-by-one because aggregating them
@@ -136,20 +113,20 @@ colour-science
 pixeloe
 psutil
 EOF
-RUN \
+RUN --mount=type=cache,target=/root/.cache/pip \
     echo "torch==${TORCH_VERSION}" >> constraints.txt && \
     echo "torchvision==${TORCHVISION_VERSION}" >> constraints.txt && \
     echo "torchaudio==${TORCHAUDIO_VERSION}" >> constraints.txt && \
     echo "pillow>=12.1.1" >> constraints.txt && \
     TORCH_INDEX_URL="https://download.pytorch.org/whl/${TORCH_INDEX_SUFFIX}" && \
-    python3.12 -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    python3.12 -m pip install --no-cache-dir --ignore-installed \
+    python3.12 -m pip install --upgrade pip setuptools wheel && \
+    python3.12 -m pip install --ignore-installed \
     --index-url https://pypi.org/simple \
     --extra-index-url "${TORCH_INDEX_URL}" \
     "torch==${TORCH_VERSION}" \
     "torchvision==${TORCHVISION_VERSION}" \
     "torchaudio==${TORCHAUDIO_VERSION}" && \
-    python3.12 -m pip install --no-cache-dir --ignore-installed \
+    python3.12 -m pip install --ignore-installed \
     --constraint constraints.txt \
     --index-url https://pypi.org/simple \
     --extra-index-url "${TORCH_INDEX_URL}" \
@@ -157,7 +134,7 @@ RUN \
     for req in ComfyUI/custom_nodes/*/requirements.txt; do \
         if [ -f "$req" ]; then \
             echo "Installing custom node requirements from $req"; \
-            python3.12 -m pip install --no-cache-dir --ignore-installed \
+            python3.12 -m pip install --ignore-installed \
             --constraint constraints.txt \
             --index-url https://pypi.org/simple \
             --extra-index-url "${TORCH_INDEX_URL}" \
@@ -167,7 +144,33 @@ RUN \
 
 # Bake in SageAttention wheel
 COPY wheels/sageattention-2.2.0-cp312-cp312-linux_x86_64.whl /tmp/sageattention-2.2.0-cp312-cp312-linux_x86_64.whl
-RUN python3.12 -m pip install --no-cache-dir --no-deps /tmp/sageattention-2.2.0-cp312-cp312-linux_x86_64.whl
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python3.12 -m pip install --no-deps /tmp/sageattention-2.2.0-cp312-cp312-linux_x86_64.whl
+
+# Overlay project-specific ComfyUI config files after dependency installation so
+# model/bootstrap config changes don't invalidate the heavy pip layers.
+COPY hf_models.json /tmp/build/ComfyUI/custom_nodes/ComfyUI-QwenVL/hf_models.json
+COPY extra_model_paths.yaml /tmp/build/ComfyUI/extra_model_paths.yaml
+COPY bootstrap_models.py /tmp/build/ComfyUI/bootstrap_models.py
+COPY model_manifest.json /tmp/build/ComfyUI/model_manifest.json
+
+# Init git repos with upstream remotes so ComfyUI-Manager can detect versions
+# and users can update via Manager at their own risk
+RUN cd /tmp/build/ComfyUI && \
+    git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "ComfyUI ${COMFYUI_VERSION}" && git tag "${COMFYUI_VERSION}" && \
+    git remote add origin https://github.com/comfyanonymous/ComfyUI.git && \
+    cd /tmp/build/ComfyUI/custom_nodes/ComfyUI-Manager && \
+    git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "ComfyUI-Manager ${MANAGER_SHA}" && \
+    git remote add origin https://github.com/ltdrdata/ComfyUI-Manager.git && \
+    cd /tmp/build/ComfyUI/custom_nodes/ComfyUI-KJNodes && \
+    git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "ComfyUI-KJNodes ${KJNODES_SHA}" && \
+    git remote add origin https://github.com/kijai/ComfyUI-KJNodes.git && \
+    cd /tmp/build/ComfyUI/custom_nodes/Civicomfy && \
+    git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "Civicomfy ${CIVICOMFY_SHA}" && \
+    git remote add origin https://github.com/MoonGoblinDev/Civicomfy.git && \
+    cd /tmp/build/ComfyUI/custom_nodes/ComfyUI-QwenVL && \
+    git add hf_models.json && \
+    git -c user.name=- -c user.email=- commit -q -m "Configure ComfyUI-QwenVL models"
 
 # Pre-populate ComfyUI-Manager cache so first cold start skips the slow registry fetch
 COPY scripts/prebake-manager-cache.py /tmp/prebake-manager-cache.py
@@ -197,7 +200,9 @@ ARG FILEBROWSER_VERSION
 ARG FILEBROWSER_SHA256
 
 # Update and install runtime dependencies, CUDA, and common tools
-RUN apt-get update && \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
     git \
     python3.12 \
@@ -231,8 +236,6 @@ RUN apt-get update && \
     && dpkg -i cuda-keyring_1.1-1_all.deb \
     && apt-get update \
     && apt-get install -y --no-install-recommends cuda-minimal-build-${CUDA_VERSION_DASH} \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
     && rm cuda-keyring_1.1-1_all.deb \
     && rm -f /usr/lib/python3.12/EXTERNALLY-MANAGED
 
