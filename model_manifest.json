@@ -1,0 +1,44 @@
+{
+  "models": [
+    {
+      "name": "WAN 2.1 VAE",
+      "kind": "huggingface_file",
+      "repo_id": "Comfy-Org/Wan_2.1_ComfyUI_repackaged",
+      "filename": "split_files/vae/wan_2.1_vae.safetensors",
+      "destination": "vae/wan_2.1_vae.safetensors"
+    },
+    {
+      "name": "NSFW Wan UMT5 XXL BF16 Fixed",
+      "kind": "huggingface_file",
+      "repo_id": "zootkitty/nsfw_wan_umt5-xxl_bf16_fixed",
+      "filename": "nsfw_wan_umt5-xxl_bf16_fixed.safetensors",
+      "destination": "text_encoders/nsfw_wan_umt5-xxl_bf16_fixed.safetensors"
+    },
+    {
+      "name": "Boundbite WAN 2.2 I2V High Noise",
+      "kind": "civitai_version",
+      "version_id": "2761725",
+      "destination": "diffusion_models/dasiwa_wan2.2_i2v_14b_boundbite_v10_highnoise.safetensors"
+    },
+    {
+      "name": "Boundbite WAN 2.2 I2V Low Noise",
+      "kind": "civitai_version",
+      "version_id": "2761870",
+      "destination": "diffusion_models/dasiwa_wan2.2_i2v_14b_boundbite_v10_lownoise.safetensors"
+    },
+    {
+      "name": "Huihui Qwen3 VL 8B Instruct Abliterated",
+      "kind": "huggingface_snapshot",
+      "repo_id": "huihui-ai/Huihui-Qwen3-VL-8B-Instruct-abliterated",
+      "cache_subdir": "LLM/cache",
+      "allow_patterns": [
+        "*.json",
+        "*.model",
+        "*.py",
+        "*.safetensors",
+        "*.txt",
+        "*.tiktoken"
+      ]
+    }
+  ]
+}

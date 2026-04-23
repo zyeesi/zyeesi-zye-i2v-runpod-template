@@ -47,6 +47,14 @@ Edit `/workspace/comfyui_args.txt` (one arg per line):
 - `/workspace/ComfyUI`: ComfyUI install
 - `/workspace/comfyui_args.txt`: ComfyUI args
 - `/workspace/filebrowser.db`: FileBrowser DB
+- `/workspace/ComfyUI/models`: runtime model store
+
+## Model Bootstrap
+
+- On container start, `bootstrap_models.py` downloads the models declared in [model_manifest.json](/D:/Repo/zye-i2v-runpod-template/model_manifest.json)
+- Set `HF_TOKEN` for Hugging Face downloads and `CIVITAI_API_KEY` for CivitAI downloads
+- To add more checkpoints, LoRAs, or other assets, edit [model_manifest.json](/D:/Repo/zye-i2v-runpod-template/model_manifest.json)
+- Detailed format and examples are in [docs/models.md](/D:/Repo/zye-i2v-runpod-template/docs/models.md)
 
 ## GitHub Actions
 

@@ -82,6 +82,8 @@ RUN git clone --depth 1 https://github.com/1038lab/ComfyUI-QwenVL.git && \
 # Overlay project-specific ComfyUI config files onto the baked tree
 COPY hf_models.json /tmp/build/ComfyUI/custom_nodes/ComfyUI-QwenVL/hf_models.json
 COPY extra_model_paths.yaml /tmp/build/ComfyUI/extra_model_paths.yaml
+COPY bootstrap_models.py /tmp/build/ComfyUI/bootstrap_models.py
+COPY model_manifest.json /tmp/build/ComfyUI/model_manifest.json
 
 # Init git repos with upstream remotes so ComfyUI-Manager can detect versions
 # and users can update via Manager at their own risk
