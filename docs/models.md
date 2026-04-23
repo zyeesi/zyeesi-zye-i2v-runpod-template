@@ -1,12 +1,14 @@
 # Model Bootstrap
 
-This template bootstraps runtime models from [model_manifest.json](/D:/Repo/zye-i2v-runpod-template/model_manifest.json) when the container starts.
+This template bootstraps runtime models from [model_manifest.json](/D:/Repo/zye-i2v-runpod-template/model_manifest.json) after ComfyUI starts.
 
 ## Current behavior
 
 - Models download into `/workspace/ComfyUI/models`
 - Existing files are skipped
 - Hugging Face snapshots download into the HF cache under `/workspace/ComfyUI/models/LLM/cache`
+- Bootstrap runs in the background, so ComfyUI can become available before all model downloads finish
+- Bootstrap logs are written to `/workspace/bootstrap_models.log` and also appear in the container logs
 - RIFE weights are not pre-downloaded here; the node can still fetch them on first use
 
 ## Required environment variables

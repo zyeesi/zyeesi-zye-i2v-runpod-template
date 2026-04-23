@@ -42,6 +42,22 @@ jobs:
           fi
           echo "IMAGE_REPO=$IMAGE_REPO" >> "$GITHUB_ENV"
 
+      - name: Resolve auto version
+        shell: bash
+        run: |
+          source .github/version.env
+
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          PATCH_VERSION=$((COMMIT_COUNT - PATCH_BASE_COMMIT_COUNT))
+          if (( PATCH_VERSION < 0 )); then
+            echo "PATCH_BASE_COMMIT_COUNT ($PATCH_BASE_COMMIT_COUNT) is greater than commit count ($COMMIT_COUNT)" >&2
+            exit 1
+          fi
+
+          VERSION_TAG="${VERSION_PREFIX}.${PATCH_VERSION}"
+          echo "VERSION_TAG=$VERSION_TAG" >> "$GITHUB_ENV"
+          echo "Resolved version: $VERSION_TAG"
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v4
         with:
@@ -52,6 +68,7 @@ jobs:
       - name: Build and push regular dev image
         uses: docker/bake-action@v6
         env:
+          TAG: ${{ env.VERSION_TAG }}
           IMAGE_REPO: ${{ env.IMAGE_REPO }}
         with:
           push: true
@@ -62,3 +79,14 @@ jobs:
             *.cache-to=type=gha,mode=max,scope=dev
           targets: |
             devpush
+
+      - name: Dev Summary
+        shell: bash
+        run: |
+          echo "Dev build completed."
+          echo "Version: ${{ env.VERSION_TAG }}"
+          echo "Docker Images:"
+          echo " - ${{ env.IMAGE_REPO }}:${{ env.VERSION_TAG }}"
+          echo " - ${{ env.IMAGE_REPO }}:${{ env.VERSION_TAG }}-cuda12.8"
+          echo " - ${{ env.IMAGE_REPO }}:dev"
+          echo " - ${{ env.IMAGE_REPO }}:dev-cuda12.8"

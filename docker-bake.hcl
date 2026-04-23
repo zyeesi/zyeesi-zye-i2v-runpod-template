@@ -84,6 +84,8 @@ target "dev" {
 target "devpush" {
   inherits = ["common"]
   tags = [
+    "${IMAGE_REPO}:${TAG}",
+    "${IMAGE_REPO}:${TAG}-cuda12.8",
     "${IMAGE_REPO}:dev",
     "${IMAGE_REPO}:dev-cuda12.8",
   ]

@@ -51,14 +51,16 @@ Edit `/workspace/comfyui_args.txt` (one arg per line):
 
 ## Model Bootstrap
 
-- On container start, `bootstrap_models.py` downloads the models declared in [model_manifest.json](/D:/Repo/zye-i2v-runpod-template/model_manifest.json)
+- After ComfyUI starts, `bootstrap_models.py` downloads the models declared in [model_manifest.json](/D:/Repo/zye-i2v-runpod-template/model_manifest.json) in the background
+- Bootstrap logs are written to `/workspace/bootstrap_models.log` and also appear in the container logs
 - Set `HF_TOKEN` for Hugging Face downloads and `CIVITAI_API_KEY` for CivitAI downloads
 - To add more checkpoints, LoRAs, or other assets, edit [model_manifest.json](/D:/Repo/zye-i2v-runpod-template/model_manifest.json)
 - Detailed format and examples are in [docs/models.md](/D:/Repo/zye-i2v-runpod-template/docs/models.md)
 
 ## GitHub Actions
 
-- Push to `main` to publish dev images: `:dev` and `:dev-cuda12.8`
+- Push to `main` to publish dev images: `:dev`, `:dev-cuda12.8`, and an auto-incremented version tag like `:v0.1.0-cuda12.8`
 - Push a `v*` tag to publish release images and update `:latest`
 - GitHub Actions uses Buildx layer caching so repeated builds can reuse unchanged Docker layers
 - For RunPod, point your template at `ghcr.io/zyeesi/zyeesi-zye-i2v-runpod-template:latest` or a versioned release tag like `ghcr.io/zyeesi/zyeesi-zye-i2v-runpod-template:v0.1.0-cuda12.8`
+- To start a new manual series such as `v0.2.x`, edit [.github/version.env](/D:/Repo/zye-i2v-runpod-template/.github/version.env) and set `VERSION_PREFIX` plus `PATCH_BASE_COMMIT_COUNT` to the current `git rev-list --count HEAD`

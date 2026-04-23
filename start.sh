@@ -7,6 +7,9 @@ OLD_VENV_DIR="$COMFYUI_DIR/.venv"
 FILEBROWSER_CONFIG="/root/.config/filebrowser/config.json"
 DB_FILE="/workspace/filebrowser.db"
 ARGS_FILE="/workspace/comfyui_args.txt"
+BOOTSTRAP_LOG="/workspace/bootstrap_models.log"
+COMFY_PID=""
+BOOTSTRAP_PID=""
 
 # ---------------------------------------------------------------------------- #
 #                          Function Definitions                                 #
@@ -111,6 +114,16 @@ setup_rife_symlink() {
     ln -sf "$COMFYUI_DIR/models/rife" "$COMFYUI_DIR/custom_nodes/comfyui-frame-interpolation/ckpts"
 }
 
+cleanup_children() {
+    if [ -n "$BOOTSTRAP_PID" ]; then
+        kill "$BOOTSTRAP_PID" 2>/dev/null || true
+    fi
+
+    if [ -n "$COMFY_PID" ]; then
+        kill "$COMFY_PID" 2>/dev/null || true
+    fi
+}
+
 # ---------------------------------------------------------------------------- #
 #                               Main Program                                    #
 # ---------------------------------------------------------------------------- #
@@ -198,10 +211,6 @@ fi
 prepare_model_dirs
 setup_rife_symlink
 
-if [ -f "$COMFYUI_DIR/bootstrap_models.py" ]; then
-    python "$COMFYUI_DIR/bootstrap_models.py"
-fi
-
 python -m pip --version > /dev/null 2>&1
 
 cd "$COMFYUI_DIR"
@@ -216,7 +225,18 @@ fi
 echo "Starting ComfyUI with args: $FIXED_ARGS"
 python main.py $FIXED_ARGS &
 COMFY_PID=$!
-trap "kill $COMFY_PID 2>/dev/null" SIGTERM SIGINT
+
+if [ -f "$COMFYUI_DIR/bootstrap_models.py" ]; then
+    echo "Starting model bootstrap in background..."
+    echo "Bootstrap logs: $BOOTSTRAP_LOG"
+    : > "$BOOTSTRAP_LOG"
+    python "$COMFYUI_DIR/bootstrap_models.py" \
+        > >(tee -a "$BOOTSTRAP_LOG") \
+        2> >(tee -a "$BOOTSTRAP_LOG" >&2) &
+    BOOTSTRAP_PID=$!
+fi
+
+trap cleanup_children SIGTERM SIGINT
 wait $COMFY_PID || true
 
 echo "============================================="
