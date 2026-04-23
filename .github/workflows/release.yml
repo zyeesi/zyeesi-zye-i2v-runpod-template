@@ -63,23 +63,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push CUDA 13.0 image
-        uses: docker/bake-action@v6
-        env:
-          TAG: ${{ env.RELEASE_VERSION }}
-          IMAGE_REPO: ${{ env.IMAGE_REPO }}
-        with:
-          push: true
-          source: .
-          files: ./docker-bake.hcl
-          targets: |
-            cuda13
-
-      - name: Clean up Docker build cache
-        run: |
-          docker builder prune -af --filter "until=1h"
-          docker system prune -af --volumes
-
       - name: Build and push regular image
         uses: docker/bake-action@v6
         env:
@@ -109,8 +92,6 @@ jobs:
           echo " - ${{ env.IMAGE_REPO }}:${{ env.RELEASE_VERSION }}-cuda12.8 (CUDA 12.8)"
           echo " - ${{ env.IMAGE_REPO }}:cuda12.8"
           echo " - ${{ env.IMAGE_REPO }}:latest"
-          echo " - ${{ env.IMAGE_REPO }}:${{ env.RELEASE_VERSION }}-cuda13.0 (CUDA 13.0)"
-          echo " - ${{ env.IMAGE_REPO }}:cuda13.0"
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "Trigger: Manual workflow dispatch"
           else

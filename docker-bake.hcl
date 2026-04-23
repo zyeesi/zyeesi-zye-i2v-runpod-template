@@ -32,16 +32,6 @@ variable "TORCHAUDIO_VERSION" {
 }
 
 # 5090 image (cu130) — can diverge from regular when needed
-variable "TORCH_VERSION_5090" {
-  default = "2.11.0+cu130"
-}
-variable "TORCHVISION_VERSION_5090" {
-  default = "0.26.0+cu130"
-}
-variable "TORCHAUDIO_VERSION_5090" {
-  default = "2.11.0+cu130"
-}
-
 variable "FILEBROWSER_VERSION" {
   default = "v2.59.0"
 }
@@ -97,32 +87,4 @@ target "devpush" {
     "${IMAGE_REPO}:dev",
     "${IMAGE_REPO}:dev-cuda12.8",
   ]
-}
-
-target "devpush-cuda13" {
-  inherits = ["common"]
-  tags = ["${IMAGE_REPO}:dev-cuda13.0"]
-  args = {
-    TORCH_VERSION       = TORCH_VERSION_5090
-    TORCHVISION_VERSION = TORCHVISION_VERSION_5090
-    TORCHAUDIO_VERSION  = TORCHAUDIO_VERSION_5090
-    CUDA_VERSION_DASH   = "13-0"
-    TORCH_INDEX_SUFFIX  = "cu130"
-  }
-}
-
-# CUDA 13.0 image (Blackwell / RTX 5090+)
-target "cuda13" {
-  inherits = ["common"]
-  tags = [
-    "${IMAGE_REPO}:${TAG}-cuda13.0",
-    "${IMAGE_REPO}:cuda13.0",
-  ]
-  args = {
-    TORCH_VERSION       = TORCH_VERSION_5090
-    TORCHVISION_VERSION = TORCHVISION_VERSION_5090
-    TORCHAUDIO_VERSION  = TORCHAUDIO_VERSION_5090
-    CUDA_VERSION_DASH   = "13-0"
-    TORCH_INDEX_SUFFIX  = "cu130"
-  }
 }
