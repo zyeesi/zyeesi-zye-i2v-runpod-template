@@ -169,8 +169,8 @@ if [ -d "$OLD_VENV_DIR" ] && [ ! -d "$VENV_DIR" ]; then
     done
     echo "Upgrading ComfyUI requirements..."
     pip install --upgrade -r "$COMFYUI_DIR/requirements.txt" 2>&1 | grep -E "^(Successfully|ERROR)" || true
-    echo "Migration complete — $INSTALLED user nodes processed (${NODE_COUNT} total, baked nodes skipped)"
-    echo "Old venv backed up at ${OLD_VENV_DIR}.bak — delete it to free space:"
+    echo "Migration complete - $INSTALLED user nodes processed (${NODE_COUNT} total, baked nodes skipped)"
+    echo "Old venv backed up at ${OLD_VENV_DIR}.bak - delete it to free space:"
     echo "  rm -rf ${OLD_VENV_DIR}.bak"
 fi
 
@@ -188,7 +188,7 @@ if [ ! -d "$COMFYUI_DIR" ] || [ ! -d "$VENV_DIR" ]; then
         source "$VENV_DIR/bin/activate"
         python -m ensurepip
         echo "Base packages (torch, numpy, etc.) available from system site-packages"
-        echo "ComfyUI ready — all dependencies pre-installed in image"
+        echo "ComfyUI ready - all dependencies pre-installed in image"
     fi
 else
     source "$VENV_DIR/bin/activate"
@@ -220,7 +220,7 @@ trap "kill $COMFY_PID 2>/dev/null" SIGTERM SIGINT
 wait $COMFY_PID || true
 
 echo "============================================="
-echo "  ComfyUI crashed — check the logs above."
+echo "  ComfyUI crashed - check the logs above."
 echo "  SSH and JupyterLab are still available."
 echo "  To restart after fixing:"
 echo "    cd $COMFYUI_DIR && source .venv-cu128/bin/activate"

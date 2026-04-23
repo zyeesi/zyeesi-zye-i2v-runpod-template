@@ -287,13 +287,35 @@ WORKDIR /workspace
 # Expose ports
 EXPOSE 8188 22 8888 8080
 
-# Copy start script
-COPY start.sh /start.sh
+# Copy start script with execute bit preserved in-image
+COPY --chmod=0755 start.sh /start.sh
 
 # Set Python 3.12 as default
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1 && \
-    update-alternatives --set python3 /usr/bin/python3.12 && \
-    chmod +x /start.sh
+    update-alternatives --set python3 /usr/bin/python3.12
+
+# Fail the build early if the entrypoint script has Windows line endings or a
+# broken shebang. This is much cheaper than discovering it after pushing a new
+# image and launching a pod.
+RUN python3 - <<'PY'
+from pathlib import Path
+import os
+import stat
+
+path = Path("/start.sh")
+data = path.read_bytes()
+
+if b"\r\n" in data or b"\r" in data:
+    raise SystemExit("/start.sh contains CRLF line endings")
+
+first_line = data.split(b"\n", 1)[0]
+if first_line != b"#!/bin/bash":
+    raise SystemExit(f"unexpected /start.sh shebang: {first_line!r}")
+
+mode = path.stat().st_mode
+if not (mode & stat.S_IXUSR):
+    raise SystemExit("/start.sh is not executable")
+PY
 
 HEALTHCHECK --interval=30s --timeout=30s --start-period=240s --retries=10 CMD ["python3", "/usr/local/bin/healthcheck.py"]
 
