@@ -102,45 +102,45 @@ RUN cd /tmp/build/ComfyUI && \
     git -c user.name=- -c user.email=- commit -q -m "Configure ComfyUI-QwenVL models"
 
 # Install Python requirements with torch pinned via constraints.
-# Custom node requirements are not stable enough for pip-compile + hashes.
+# Custom node requirements are installed one-by-one because aggregating them
+# into a single resolver run is fragile and produces poor diagnostics.
 WORKDIR /tmp/build
-RUN cat ComfyUI/requirements.txt > requirements.in && \
-    for node_dir in ComfyUI/custom_nodes/*/; do \
-        if [ -f "$node_dir/requirements.txt" ]; then \
-            cat "$node_dir/requirements.txt" >> requirements.in; \
-        fi; \
-    done && \
-    echo "GitPython" >> requirements.in && \
-    echo "opencv-python" >> requirements.in && \
-    echo "jupyter" >> requirements.in && \
-    echo "jupyter-resource-usage" >> requirements.in && \
-    echo "jupyterlab-nvdashboard" >> requirements.in && \
-    echo "transformers>=4.57.0" >> requirements.in && \
-    echo "accelerate" >> requirements.in && \
-    echo "diffusers" >> requirements.in && \
-    echo "peft" >> requirements.in && \
-    echo "bitsandbytes" >> requirements.in && \
-    echo "huggingface_hub" >> requirements.in && \
-    echo "hf_xet" >> requirements.in && \
-    echo "einops" >> requirements.in && \
-    echo "kornia" >> requirements.in && \
-    echo "safetensors" >> requirements.in && \
-    echo "scipy" >> requirements.in && \
-    echo "omegaconf" >> requirements.in && \
-    echo "opencv-contrib-python-headless" >> requirements.in && \
-    echo "imageio-ffmpeg" >> requirements.in && \
-    echo "numba" >> requirements.in && \
-    echo "spandrel" >> requirements.in && \
-    echo "sentencepiece" >> requirements.in && \
-    echo "lark" >> requirements.in && \
-    echo "colour-science" >> requirements.in && \
-    echo "pixeloe" >> requirements.in && \
-    echo "psutil" >> requirements.in && \
+RUN cp ComfyUI/requirements.txt base-requirements.txt && \
+    cat <<'EOF' >> base-requirements.txt
+GitPython
+opencv-python
+jupyter
+jupyter-resource-usage
+jupyterlab-nvdashboard
+transformers>=4.57.0
+accelerate
+diffusers
+peft
+bitsandbytes
+huggingface_hub
+hf_xet
+einops
+kornia
+safetensors
+scipy
+omegaconf
+opencv-contrib-python-headless
+imageio-ffmpeg
+numba
+spandrel
+sentencepiece
+lark
+colour-science
+pixeloe
+psutil
+EOF
+RUN \
     echo "torch==${TORCH_VERSION}" >> constraints.txt && \
     echo "torchvision==${TORCHVISION_VERSION}" >> constraints.txt && \
     echo "torchaudio==${TORCHAUDIO_VERSION}" >> constraints.txt && \
     echo "pillow>=12.1.1" >> constraints.txt && \
     TORCH_INDEX_URL="https://download.pytorch.org/whl/${TORCH_INDEX_SUFFIX}" && \
+    python3.12 -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
     python3.12 -m pip install --no-cache-dir --ignore-installed \
     --index-url https://pypi.org/simple \
     --extra-index-url "${TORCH_INDEX_URL}" \
@@ -151,7 +151,17 @@ RUN cat ComfyUI/requirements.txt > requirements.in && \
     --constraint constraints.txt \
     --index-url https://pypi.org/simple \
     --extra-index-url "${TORCH_INDEX_URL}" \
-    -r requirements.in
+    -r base-requirements.txt && \
+    for req in ComfyUI/custom_nodes/*/requirements.txt; do \
+        if [ -f "$req" ]; then \
+            echo "Installing custom node requirements from $req"; \
+            python3.12 -m pip install --no-cache-dir --ignore-installed \
+            --constraint constraints.txt \
+            --index-url https://pypi.org/simple \
+            --extra-index-url "${TORCH_INDEX_URL}" \
+            -r "$req"; \
+        fi; \
+    done
 
 # Bake in SageAttention wheel
 COPY wheels/sageattention-2.2.0-cp312-cp312-linux_x86_64.whl /tmp/sageattention-2.2.0-cp312-cp312-linux_x86_64.whl
