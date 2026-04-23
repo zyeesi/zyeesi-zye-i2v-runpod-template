@@ -98,32 +98,8 @@ RUN cd /tmp/build/ComfyUI && \
     git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "Civicomfy ${CIVICOMFY_SHA}" && \
     git remote add origin https://github.com/MoonGoblinDev/Civicomfy.git && \
     cd /tmp/build/ComfyUI/custom_nodes/ComfyUI-QwenVL && \
-    git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "ComfyUI-QwenVL" && \
-    git remote add origin https://github.com/1038lab/ComfyUI-QwenVL.git && \
-    cd /tmp/build/ComfyUI/custom_nodes/ComfyUI-PainterI2V && \
-    git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "ComfyUI-PainterI2V" && \
-    git remote add origin https://github.com/princepainter/ComfyUI-PainterI2V.git && \
-    cd /tmp/build/ComfyUI/custom_nodes/comfyui-find-perfect-resolution && \
-    git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "comfyui-find-perfect-resolution" && \
-    git remote add origin https://github.com/ashtar1984/comfyui-find-perfect-resolution.git && \
-    cd /tmp/build/ComfyUI/custom_nodes/ComfyUI-Easy-Use && \
-    git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "ComfyUI-Easy-Use" && \
-    git remote add origin https://github.com/yolain/ComfyUI-Easy-Use.git && \
-    cd /tmp/build/ComfyUI/custom_nodes/rgthree-comfy && \
-    git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "rgthree-comfy" && \
-    git remote add origin https://github.com/rgthree/rgthree-comfy.git && \
-    cd /tmp/build/ComfyUI/custom_nodes/ComfyUI-Frame-Interpolation && \
-    git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "ComfyUI-Frame-Interpolation" && \
-    git remote add origin https://github.com/Fannovel16/ComfyUI-Frame-Interpolation.git && \
-    cd /tmp/build/ComfyUI/custom_nodes/ComfyUI-VideoHelperSuite && \
-    git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "ComfyUI-VideoHelperSuite" && \
-    git remote add origin https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git && \
-    cd /tmp/build/ComfyUI/custom_nodes/ComfyUI_essentials && \
-    git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "ComfyUI_essentials" && \
-    git remote add origin https://github.com/cubiq/ComfyUI_essentials.git && \
-    cd /tmp/build/ComfyUI/custom_nodes/ComfyUI-HuggingFace && \
-    git init && git add -A && git -c user.name=- -c user.email=- commit -q -m "ComfyUI-HuggingFace" && \
-    git remote add origin https://github.com/huchukato/ComfyUI-HuggingFace.git
+    git add hf_models.json && \
+    git -c user.name=- -c user.email=- commit -q -m "Configure ComfyUI-QwenVL models"
 
 # Generate lock file from all requirements (including torch pins), then install with hash verification
 WORKDIR /tmp/build
